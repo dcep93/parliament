@@ -10,7 +10,10 @@
 // lastPresident ?int
 // presidentAction ?Action
 // finished bool
-// enum Action INVESTIGATE, KILL, APPOINT_PRESIDENT
+// enum Action EXAMINE, INVESTIGATE, KILL, APPOINT_PRESIDENT
+
+// todo veto
+// todo examine
 
 var NUM_LIBERAL_POLICIES = 6;
 var NUM_FASCIST_POLICIES = 11;
@@ -27,6 +30,7 @@ var POLICY_OPTIONS = 3;
 var INVESTIGATE = "investigate";
 var KILL = "kill";
 var APPOINT_PRESIDENT = "appoint_president";
+var EXAMINE = "examine";
 
 function boolToString(bool) {
 	return bool ? "liberal" : "fascist";
@@ -43,7 +47,7 @@ function discardPolicy() {
 		state.boards[policy]++;
 		message = `passed a ${boolToString(policy)} policy`;
 		var victory = checkForVictory();
-		state.presidentAction = getPresidentAction();
+		state.presidentAction = getPresidentAction(policy);
 		if (state.presidentAction === null) advancePresident();
 		if (victory !== null) {
 			state.finished = true;
@@ -160,8 +164,42 @@ function advancePresident() {
 	throw DeveloperException("context");
 }
 
-// todo
-function getPresidentAction() {}
+function getPresidentAction(policy) {
+	var rank = state.boards[policy];
+	if (!policy) {
+		switch (rank) {
+			case 1:
+				switch (state.players.length) {
+					case 9:
+					case 10:
+						return INVESTIGATE;
+				}
+			case 2:
+				switch (state.players.length) {
+					case 7:
+					case 8:
+					case 9:
+					case 10:
+						return INVESTIGATE;
+				}
+			case 3:
+				switch (state.players.length) {
+					case 5:
+					case 6:
+						return EXAMINE;
+					case 7:
+					case 8:
+					case 9:
+					case 10:
+						return APPOINT_PRESIDENT;
+				}
+			case 4:
+			case 5:
+				return KILL;
+		}
+	}
+	return null;
+}
 
 function hitlerWinsChancellor() {
 	var chancellor = state.players[state.chancellor];
