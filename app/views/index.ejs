@@ -12,99 +12,15 @@
 
 		<div id="global_controls" class="bubble inline">
 			<%- include(views+'/global_controls.html') %>
+			<button id="start_over">Start Over</button>
 			<div class="space">
-				<span>Num Suits: </span>
-				<input
-					id="num_suits"
-					class="control_number"
-					type="number"
-					autocomplete="off"
-					value="3"
-				/>
-				<button id="start_over">Start Over</button>
-				<div class="space">
-					<button id="show_log">Show Log</button>
-				</div>
+				<button id="show_log">Show Log</button>
 			</div>
 		</div>
 
 		<div id="game_controls_div"></div>
-		<div class="bubble" id="hand_div">
-			<p>Hand:</p>
-			<div id="hand" class="flex"></div>
-		</div>
-		<div>
-			<div class="bubble inline">
-				<p>Trump:</p>
-				<div><p id="trump"></p></div>
-			</div>
-			<div class="bubble inline">
-				<p>Lead:</p>
-				<div><p id="lead"></p></div>
-			</div>
-			<div class="bubble inline">
-				<p>Last Trick:</p>
-				<div><p id="previous"></p></div>
-			</div>
-		</div>
 		<div id="players_state" class="flex"></div>
-
-		<div>
-			<div class="inline bubble flex">
-				<div class="bubble">
-					<div>
-						<span>11</span>
-						<span
-							>If lead, force either a 1 of same suit or highest
-							card of same suit</span
-						>
-					</div>
-					<div>
-						<span>9</span>
-						<span>Counts as trump if is only 9</span>
-					</div>
-					<div>
-						<span>7</span>
-						<span>Winner of this trick gets a point</span>
-					</div>
-					<div>
-						<span>5</span>
-						<span
-							>Draw a card, then put a card at bottom of
-							deck</span
-						>
-					</div>
-					<div>
-						<span>3</span>
-						<span>May trade trump card with a card in hand</span>
-					</div>
-					<div>
-						<span>1</span>
-						<span>Lead next trick even if lose this trick</span>
-					</div>
-				</div>
-				<div class="bubble">
-					<div>
-						<span>0-3</span>/<span>6</span> <span>Humble</span>
-					</div>
-					<div>
-						<span>4</span>/<span>1</span> <span>DEFEATED</span>
-					</div>
-					<div>
-						<span>5</span>/<span>2</span> <span>Defeated</span>
-					</div>
-					<div>
-						<span>6</span>/<span>3</span> <span>defeated</span>
-					</div>
-					<div>
-						<span>7-9</span>/<span>6</span> <span>Victory</span>
-					</div>
-					<div>
-						<span>10-13</span>/<span>0</span> <span>Greedy</span>
-					</div>
-				</div>
-			</div>
-		</div>
+		<div id="board_state"></div>
 
 		<%- include(views+'/post.html') %>
 	</body>
