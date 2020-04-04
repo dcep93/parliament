@@ -7,21 +7,181 @@
 // voteTracker int
 // boards {bool: int}
 // lastTicket []int
-// nextPresident ?int
+// lastPresident ?int
 // presidentAction ?Action
-// enum Action INVESTIGATE, KILL, APPOINT
+// finished bool
+// enum Action INVESTIGATE, KILL, APPOINT_PRESIDENT
 
 var NUM_LIBERAL_POLICIES = 6;
 var NUM_FASCIST_POLICIES = 13;
+var MAX_VOTE_TRACKER = 3;
+var MIN_CARDS_IN_DECK = 4;
+var POLICY_OPTIONS = 3;
+
+var INVESTIGATE = "investigate";
+var KILL = "kill";
+var APPOINT_PRESIDENT = "appoint_president";
+
+function boolToString(bool) {
+	return bool ? "liberal" : "fascist";
+}
+
+function discardPolicy() {
+	var index = $(this).attr("data-index");
+	var discardedPolicy = state.policies.splice(index, 1);
+	state.discard.unshift(discardedPolicy);
+	var message;
+	if (state.policies.length === 1) {
+		var policy = state.policies[0];
+		state.policies = null;
+		state.boards[policy]++;
+		message = `passed a ${boolToString(policy)} policy`;
+		var victory = checkForVictory();
+		state.presidentAction = getPresidentAction();
+		if (state.presidentAction === null) advancePresident();
+		if (victory !== null) {
+			state.finished = true;
+			message += ` - ${boolToString(victory)}s win!`;
+		}
+		state.players.forEach((player) => {
+			player.state.vote = null;
+		});
+		state.chancellor = null;
+	} else {
+		message = "discarded a policy";
+	}
+	sendState(message);
+}
 
 function isMyTurn() {
+	if (state.finished) return false;
+	// president appointing chancellor
 	if (state.chancellor === null) {
-		return myIndex === president;
+		return myIndex === state.president;
+		// need to vote
 	} else if (me().state.vote === null) {
 		return true;
+		// chancellor enacting
+	} else if (
+		state.policies !== null &&
+		state.policies.length == POLICY_OPTIONS - 1
+	) {
+		return myIndex === state.chancellor;
+		// otherwise, must be president
 	} else {
-		return myIndex === state.president || myIndex === state.chancellor;
+		return myIndex === state.president;
 	}
+}
+
+function pickPlayer() {
+	var index = $(this).attr("data-index");
+	var player = state.players[index];
+	var presidentAction = state.presidentAction;
+	state.presidentAction = null;
+	switch (presidentAction) {
+		case INVESTIGATE:
+			var affiliation = boolToString(player.state.party);
+			alert(`${player.name} is a ${affiliation}`);
+			return sendState(`investigated ${player.name}`);
+		case KILL:
+			player.state.dead = true;
+			var message = `killed ${player.name}`;
+			if (player.state.isHitler) {
+				message += ` ${boolToString(true)}s win!`;
+				state.finished = true;
+			}
+			return sendState(message);
+		case APPOINT_PRESIDENT:
+			state.president = index;
+			state.lastPresident = myIndex;
+			return sendState(`appointed ${player.name} as next president`);
+		default:
+			if (state.lastTicket.indexOf(index) !== false)
+				return alert("that player was on the previous ticket");
+			state.chancellor = index;
+			return sendState(`appointed ${player.name} as chancellor`);
+	}
+}
+
+function vote() {
+	var raw = $(this).attr("data-bool");
+	var bool = JSON.parse(raw);
+	me().state.vote = bool;
+	var outcome = getOutcome();
+	var message = "voted";
+	if (outcome !== null) {
+		var action;
+		if (outcome) {
+			action = "elected";
+			if (hitlerWinsChancellor()) {
+				state.finished = true;
+				action += ` hitler - ${boolToString(false)}s win`;
+			}
+			state.voteTracker = 0;
+			state.policies = state.deck.splice(POLICY_OPTIONS);
+			state.lastTicket = [state.president, state.chancellor];
+		} else {
+			action = "not elected";
+			state.voteTracker++;
+			if (state.voteTracker === MAX_VOTE_TRACKER) {
+				var policy = state.deck.pop();
+				state.boards[policy]++;
+				state.voteTracker = 0;
+				action += ` - ${boolToString(policy)} auto passed`;
+				var victory = checkForVictory();
+				if (victory !== null) {
+					state.finished = true;
+					action += ` - ${boolToString(victory)}s win!`;
+				}
+			}
+			advancePresident();
+		}
+		message += ` - ${action}`;
+	}
+	sendState(message);
+}
+
+function advancePresident() {
+	if (state.lastPresident !== null) {
+		state.president = state.lastPresident;
+		state.lastPresident = null;
+	}
+	for (var i = 0; i < state.players.length; i++) {
+		state.president = playerByIndex(state.president + 1);
+		if (!state.players[state.president].state.dead) return;
+	}
+	alert("something went wrong - everyone is dead");
+	throw DeveloperException("context");
+}
+
+// todo
+function getPresidentAction() {}
+
+// todo
+function hitlerWinsChancellor() {}
+
+function checkForVictory() {
+	if (state.boards[true] === 0) return true;
+	if (state.boards[false] === 0) return false;
+	if (state.deck.length < MIN_CARDS_IN_DECK) shuffle();
+	return null;
+}
+
+function shuffle() {
+	state.deck = state.discard.concat(state.deck);
+	state.discard = [];
+	shuffleArray(state.deck);
+}
+
+function getOutcome() {
+	var vote = 0;
+	for (var i = 0; i < state.players.length; i++) {
+		var playerState = state.players[i].state;
+		if (playerState.dead) continue;
+		if (playerState.vote === null) return null;
+		vote += playerState.vote ? 1 : -1;
+	}
+	return vote > 0;
 }
 
 // todo
@@ -47,7 +207,8 @@ $(document).ready(function () {
 function prepare() {
 	var config = getConfig();
 	if (!config) return;
-	state.discard = buildArray(NUM_LIBERAL_POLICIES, NUM_FASCIST_POLICIES);
+	state.deck = buildArray(NUM_LIBERAL_POLICIES, NUM_FASCIST_POLICIES);
+	state.discard = [];
 	shuffle();
 	state.president = myIndex;
 	state.chancellor = null;
@@ -58,7 +219,7 @@ function prepare() {
 		[false]: config.fascistPolicies,
 	};
 	state.lastTicket = [];
-	state.nextPresident = null;
+	state.lastPresident = null;
 	state.presidentAction = null;
 	for (var i = 0; i < state.players.length; i++) {
 		state.players[i].state = newState();
@@ -72,6 +233,7 @@ function prepare() {
 		playerState.isHitler = role === null;
 		playerState.party = Boolean(role);
 	}
+	state.finished = false;
 	sendState("prepare");
 }
 
@@ -97,6 +259,7 @@ sendState = function () {
 	$("#log_container").hide();
 };
 
+// todo
 function update() {}
 
 function showLog() {
