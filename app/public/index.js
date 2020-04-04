@@ -14,6 +14,10 @@
 
 var NUM_LIBERAL_POLICIES = 6;
 var NUM_FASCIST_POLICIES = 13;
+
+var LIBERAL_POLICIES_NEEDED = 5;
+var FASCIST_POLICIES_NEEDED = 6;
+
 var MAX_VOTE_TRACKER = 3;
 var MIN_CARDS_IN_DECK = 4;
 var POLICY_OPTIONS = 3;
@@ -161,8 +165,8 @@ function getPresidentAction() {}
 function hitlerWinsChancellor() {}
 
 function checkForVictory() {
-	if (state.boards[true] === 0) return true;
-	if (state.boards[false] === 0) return false;
+	if (state.boards[true] === LIBERAL_POLICIES_NEEDED) return true;
+	if (state.boards[false] === FASCIST_POLICIES_NEEDED) return false;
 	if (state.deck.length < MIN_CARDS_IN_DECK) shuffle();
 	return null;
 }
@@ -184,16 +188,17 @@ function getOutcome() {
 	return vote > 0;
 }
 
-// todo
-function getConfig() {
+function getNumFascistPlayers() {
 	switch (state.players.length) {
 		case 5:
-			return {
-				liberalPlayers: 3,
-				fascistPlayers: 2,
-				liberalPolicies: 5,
-				fascistPolicies: 6,
-			};
+		case 6:
+			return 2;
+		case 7:
+		case 8:
+			return 3;
+		case 9:
+		case 10:
+			return 4;
 		default:
 			return alert("invalid number of players");
 	}
@@ -205,8 +210,12 @@ $(document).ready(function () {
 });
 
 function prepare() {
-	var config = getConfig();
-	if (!config) return;
+	var numFascistPlayers = getNumFascistPlayers();
+	if (!numFascistPlayers) return;
+	var numLiberalPlayers = state.players.length - numFascistPlayers;
+	var roles = buildArray(numLiberalPlayers, numFascistPlayers);
+	roles[0] = null;
+	shuffleArray(roles);
 	state.deck = buildArray(NUM_LIBERAL_POLICIES, NUM_FASCIST_POLICIES);
 	state.discard = [];
 	shuffle();
@@ -215,8 +224,8 @@ function prepare() {
 	state.policies = null;
 	state.voteTracker = 0;
 	state.boards = {
-		[true]: config.liberalPolicies,
-		[false]: config.fascistPolicies,
+		[true]: 0,
+		[false]: 0,
 	};
 	state.lastTicket = [];
 	state.lastPresident = null;
@@ -224,9 +233,6 @@ function prepare() {
 	for (var i = 0; i < state.players.length; i++) {
 		state.players[i].state = newState();
 	}
-	var roles = buildArray(config.liberalPlayers, fascistPlayers);
-	roles[0] = null;
-	shuffleArray(roles);
 	for (var i = 0; i < state.players.length; i++) {
 		var playerState = state.players[i].state;
 		var role = roles[i];
