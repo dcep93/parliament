@@ -13,10 +13,12 @@
 // enum Action INVESTIGATE, KILL, APPOINT_PRESIDENT
 
 var NUM_LIBERAL_POLICIES = 6;
-var NUM_FASCIST_POLICIES = 13;
+var NUM_FASCIST_POLICIES = 11;
 
 var LIBERAL_POLICIES_NEEDED = 5;
 var FASCIST_POLICIES_NEEDED = 6;
+
+var HITLER_CHANCELLOR_REQUIREMENT = 3;
 
 var MAX_VOTE_TRACKER = 3;
 var MIN_CARDS_IN_DECK = 4;
@@ -161,8 +163,13 @@ function advancePresident() {
 // todo
 function getPresidentAction() {}
 
-// todo
-function hitlerWinsChancellor() {}
+function hitlerWinsChancellor() {
+	var chancellor = state.players[state.chancellor];
+	if (chancellor.state.isHitler) {
+		if (state.boards[false] >= HITLER_CHANCELLOR_REQUIREMENT) return true;
+	}
+	return false;
+}
 
 function checkForVictory() {
 	if (state.boards[true] === LIBERAL_POLICIES_NEEDED) return true;
