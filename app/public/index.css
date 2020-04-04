@@ -1,0 +1,11 @@
+#hand_div {
+	max-width: 400px;
+}
+
+#log_container {
+	display: none;
+}
+
+#previous {
+	white-space: pre-line;
+}
