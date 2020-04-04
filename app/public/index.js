@@ -32,6 +32,8 @@ var KILL = "kill";
 var APPOINT_PRESIDENT = "appoint_president";
 var EXAMINE = "examine";
 
+var seenAffiliation = false;
+
 function boolToString(bool) {
 	return bool ? "liberal" : "fascist";
 }
@@ -311,7 +313,42 @@ sendState = function () {
 };
 
 // todo
-function update() {}
+function update() {
+	ensureAffiliationSeen();
+}
+
+function ensureAffiliationSeen() {
+	if (!seenAffiliation) {
+		seenAffiliation = true;
+		var myState = me().state;
+		var message;
+		if (myState.isHitler) {
+			message = "you are literally Hitler";
+		} else {
+			message = `you are ${boolToString(myState.party)}`;
+		}
+		if (!myState.party) {
+			if (
+				myState.isHitler &&
+				state.players.length >=
+					MIN_PLAYERS_FOR_HITLER_TO_NOT_KNOW_WHO_FASCISTS_ARE
+			) {
+				message += `\nyou dont know who the other ${boolToString(
+					false
+				)}s are`;
+			} else {
+				var fellowsString = state.players
+					.filter((player) => !player.state.party)
+					.map((player) => player.name)
+					.join("\n");
+				message += `\nyour fellow ${boolToString(
+					false
+				)}s:\n${fellowsString}`;
+			}
+		}
+		alert(message);
+	}
+}
 
 function showLog() {
 	if (
