@@ -19,6 +19,7 @@ var LIBERAL_POLICIES_NEEDED = 5;
 var FASCIST_POLICIES_NEEDED = 6;
 
 var HITLER_CHANCELLOR_REQUIREMENT = 3;
+var PRESIDENT_ELIGIBLE_TO_BE_NEXT_CHANCELLOR_PLAYERS = 5;
 
 var MAX_VOTE_TRACKER = 3;
 var MIN_CARDS_IN_DECK = 4;
@@ -136,7 +137,11 @@ function vote() {
 			}
 			state.voteTracker = 0;
 			state.policies = state.deck.splice(POLICY_OPTIONS);
-			state.lastTicket = [state.president, state.chancellor];
+			if (fewPlayersLeft()) {
+				state.lastTicket = [state.state.chancellor];
+			} else {
+				state.lastTicket = [state.president, state.chancellor];
+			}
 		} else {
 			action = "not elected";
 			var incrementMessage = incrementVoteTracker();
@@ -146,6 +151,13 @@ function vote() {
 		message += ` - ${action}`;
 	}
 	sendState(message);
+}
+
+function fewPlayersLeft() {
+	return (
+		state.players.filter((player) => !player.state.dead).length <=
+		PRESIDENT_ELIGIBLE_TO_BE_NEXT_CHANCELLOR_PLAYERS
+	);
 }
 
 function incrementVoteTracker() {
