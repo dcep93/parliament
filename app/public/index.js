@@ -13,7 +13,6 @@
 // enum Action EXAMINE, INVESTIGATE, KILL, APPOINT_PRESIDENT
 
 // todo veto
-// todo examine
 
 var NUM_LIBERAL_POLICIES = 6;
 var NUM_FASCIST_POLICIES = 11;
@@ -315,6 +314,21 @@ sendState = function () {
 // todo
 function update() {
 	ensureAffiliationSeen();
+	handleExamine();
+}
+
+function handleExamine() {
+	if (state.presidentAction === EXAMINE) {
+		state.presidentAction = null;
+		if (myIndex === state.president) {
+			var top3 = state.deck
+				.slice(-3)
+				.map(boolToString)
+				.reverse()
+				.join(" ");
+			alert(`top 3 cards are: ${top3}`);
+		}
+	}
 }
 
 function ensureAffiliationSeen() {
