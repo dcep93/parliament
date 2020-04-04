@@ -10,9 +10,7 @@
 // lastPresident ?int
 // presidentAction ?Action
 // finished bool
-// enum Action EXAMINE, INVESTIGATE, KILL, APPOINT_PRESIDENT
-
-// todo veto
+// enum Action VETO, VETO_DECLINE, EXAMINE, INVESTIGATE, KILL, APPOINT_PRESIDENT
 
 var NUM_LIBERAL_POLICIES = 6;
 var NUM_FASCIST_POLICIES = 11;
@@ -25,16 +23,24 @@ var HITLER_CHANCELLOR_REQUIREMENT = 3;
 var MAX_VOTE_TRACKER = 3;
 var MIN_CARDS_IN_DECK = 4;
 var POLICY_OPTIONS = 3;
+var POLICIES_TO_EXAMINE = 3;
 
 var INVESTIGATE = "investigate";
 var KILL = "kill";
 var APPOINT_PRESIDENT = "appoint_president";
 var EXAMINE = "examine";
+var VETO = "veto";
+var VETO_DECLINE = "veto_decline";
 
 var seenAffiliation = false;
 
 function boolToString(bool) {
 	return bool ? "liberal" : "fascist";
+}
+
+function requestVeto() {
+	state.presidentAction = VETO;
+	sendState("requests a veto");
 }
 
 function discardPolicy() {
@@ -46,7 +52,7 @@ function discardPolicy() {
 		var policy = state.policies[0];
 		state.policies = null;
 		state.boards[policy]++;
-		message = `passed a ${boolToString(policy)} policy`;
+		message = `enacted a ${boolToString(policy)} policy`;
 		var victory = checkForVictory();
 		state.presidentAction = getPresidentAction(policy);
 		if (state.presidentAction === null) advancePresident();
@@ -133,23 +139,30 @@ function vote() {
 			state.lastTicket = [state.president, state.chancellor];
 		} else {
 			action = "not elected";
-			state.voteTracker++;
-			if (state.voteTracker === MAX_VOTE_TRACKER) {
-				var policy = state.deck.pop();
-				state.boards[policy]++;
-				state.voteTracker = 0;
-				action += ` - ${boolToString(policy)} auto passed`;
-				var victory = checkForVictory();
-				if (victory !== null) {
-					state.finished = true;
-					action += ` - ${boolToString(victory)}s win!`;
-				}
-			}
+			var incrementMessage = incrementVoteTracker();
+			if (incrementMessage !== null) action += ` - ${incrementMessage}`;
 			advancePresident();
 		}
 		message += ` - ${action}`;
 	}
 	sendState(message);
+}
+
+function incrementVoteTracker() {
+	state.voteTracker++;
+	if (state.voteTracker === MAX_VOTE_TRACKER) {
+		var policy = state.deck.pop();
+		state.boards[policy]++;
+		state.voteTracker = 0;
+		var message = `${boolToString(policy)} auto passed`;
+		var victory = checkForVictory();
+		if (victory !== null) {
+			state.finished = true;
+			message += ` - ${boolToString(victory)}s win!`;
+		}
+		return message;
+	}
+	return null;
 }
 
 function advancePresident() {
@@ -311,22 +324,43 @@ sendState = function () {
 	$("#log_container").hide();
 };
 
-// todo
 function update() {
+	if (handleVeto()) return;
 	ensureAffiliationSeen();
 	handleExamine();
+}
+
+function handleVeto() {
+	if (state.presidentAction === VETO) {
+		if (myIndex === state.president) {
+			var response = confirm("Do you agree to a veto?");
+			if (response) {
+				var message = "agrees to a veto";
+				var incrementMessage = incrementVoteTracker();
+				if (incrementMessage !== null)
+					message += ` - ${incrementMessage}`;
+				sendState(message);
+			} else {
+				state.presidentAction = VETO_DECLINE;
+				sendState("declines a veto");
+			}
+		}
+		return true;
+	} else {
+		return false;
+	}
 }
 
 function handleExamine() {
 	if (state.presidentAction === EXAMINE) {
 		state.presidentAction = null;
 		if (myIndex === state.president) {
-			var top3 = state.deck
-				.slice(-3)
+			var topPolicies = state.deck
+				.slice(POLICIES_TO_EXAMINE)
 				.map(boolToString)
 				.reverse()
 				.join(" ");
-			alert(`top 3 cards are: ${top3}`);
+			alert(`top 3 cards are: ${topPolicies}`);
 		}
 	}
 }
