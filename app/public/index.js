@@ -13,6 +13,8 @@
 // date Date
 // enum Action VETO, VETO_DECLINE, EXAMINE, INVESTIGATE, KILL, APPOINT_PRESIDENT
 
+// todo data-attr
+
 var NUM_LIBERAL_POLICIES = 6;
 var NUM_FASCIST_POLICIES = 11;
 
@@ -45,6 +47,7 @@ function update() {
 	setDeck();
 	setPolicies();
 	setLastTicket();
+	setVotes();
 }
 
 function setRules() {
@@ -121,6 +124,8 @@ function setPlayers() {
 		if (state.chancellor === i)
 			$("<p>").text("chancellor").appendTo(playerDiv);
 	}
+	if (myIndex === state.president && state.chancellor === null)
+		$(".player_state").click(pickPlayer);
 }
 
 function setBoards() {
@@ -164,13 +169,16 @@ function setPoliciesHelper() {
 	$("#policies_parent").show();
 	var policiesDiv = $("#policies").empty();
 	for (var i = 0; i < state.policies.length; i++) {
-		$("<p>").text(boolToString(state.policies[i])).appendTo(policiesDiv);
+		$("<p>")
+			.text(boolToString(state.policies[i]))
+			.click(discardPolicy)
+			.appendTo(policiesDiv);
 	}
 }
 
 function addVetoOption() {
 	var policiesDiv = $("#policies");
-	$("<p>").text("Veto").appendTo(policiesDiv);
+	$("<p>").text("Veto").click(requestVeto).appendTo(policiesDiv);
 }
 
 function setLastTicket() {
@@ -179,6 +187,17 @@ function setLastTicket() {
 		var index = state.lastTicket[i];
 		var name = state.players[index].name;
 		$("<p>").text(name).appendTo(lastTicketDiv);
+	}
+}
+
+function setVotes() {
+	var votesDiv = $("#votes");
+	if (state.chancellor !== null && state.policies === null) {
+		votesDiv.show();
+		$("<p>").text("ja").click(vote).appendTo(votesDiv);
+		$("<p>").text("nein").click(vote).appendTo(votesDiv);
+	} else {
+		votesDiv.hide();
 	}
 }
 
