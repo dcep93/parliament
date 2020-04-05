@@ -490,7 +490,7 @@ function prepare() {
 
 function buildArray(numTrues, numFalses) {
 	var trues = Array(numTrues).fill(true);
-	var falses = Array(config.numFascistPolicies).fill(false);
+	var falses = Array(numFalses).fill(false);
 	return trues.concat(falses);
 }
 
