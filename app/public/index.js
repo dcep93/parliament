@@ -21,6 +21,7 @@ var FASCIST_POLICIES_NEEDED = 6;
 
 var HITLER_CHANCELLOR_REQUIREMENT = 3;
 var PRESIDENT_ELIGIBLE_TO_BE_NEXT_CHANCELLOR_PLAYERS = 5;
+var MIN_PLAYERS_FOR_HITLER_TO_NOT_KNOW_WHO_FASCISTS_ARE = 7;
 
 var MAX_VOTE_TRACKER = 3;
 var MIN_CARDS_IN_DECK = 4;
@@ -454,6 +455,7 @@ $(document).ready(function () {
 });
 
 function prepare() {
+	state.currentPlayer = -1;
 	var numFascistPlayers = getNumFascistPlayers();
 	if (!numFascistPlayers) return;
 	var numLiberalPlayers = state.players.length - numFascistPlayers;
