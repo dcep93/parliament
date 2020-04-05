@@ -79,8 +79,27 @@ function getRules() {
 	}
 }
 
-// todo
-function setPlayers() {}
+function setPlayers() {
+	var playerStates = $("#player_states");
+	playerStates.empty();
+	for (var i = 0; i < state.players.length; i++) {
+		var player = state.players[i];
+		var playerDiv = $("<div>").appendTo(playerStates);
+		var message = player.name;
+		if (player.state.cheater) message += ` - cheater`;
+		if (player.state.dead) message += ` - dead`;
+		$("<p>").text(message).appendTo(playerDiv);
+		var voteBool = player.state.vote;
+		if (voteBool !== null) {
+			var voteMessage = voteBool ? "ja" : "nein";
+			$("<p>").text(`votes ${voteMessage}`).appendTo(playerDiv);
+		}
+		if (state.president === i)
+			$("<p>").text("president").appendTo(playerDiv);
+		if (state.chancellor === i)
+			$("<p>").text("chancellor").appendTo(playerDiv);
+	}
+}
 
 // todo
 function setBoards() {}
