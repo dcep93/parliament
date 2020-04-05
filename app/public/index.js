@@ -80,8 +80,7 @@ function getRules() {
 }
 
 function setPlayers() {
-	var playerStates = $("#player_states");
-	playerStates.empty();
+	var playerStates = $("#player_states").empty();
 	for (var i = 0; i < state.players.length; i++) {
 		var player = state.players[i];
 		var playerDiv = $("<div>").appendTo(playerStates);
@@ -101,8 +100,16 @@ function setPlayers() {
 	}
 }
 
-// todo
-function setBoards() {}
+function setBoards() {
+	var boardsDiv = $("#board_state").empty();
+	boardsDiv.append(getBoardDiv(true));
+	boardsDiv.append(getBoardDiv(false));
+}
+
+function getBoardDiv(bool) {
+	var numPolicies = state.boards[bool];
+	return $("<p>").text(`${boolToString(bool)} policies: ${numPolicies}`);
+}
 
 // todo
 function setDeck() {}
