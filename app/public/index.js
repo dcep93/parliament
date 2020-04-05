@@ -13,6 +13,29 @@
 // date Date
 // enum Action VETO, VETO_DECLINE, EXAMINE, INVESTIGATE, KILL, APPOINT_PRESIDENT
 
+var NUM_LIBERAL_POLICIES = 6;
+var NUM_FASCIST_POLICIES = 11;
+
+var LIBERAL_POLICIES_NEEDED = 5;
+var FASCIST_POLICIES_NEEDED = 6;
+
+var HITLER_CHANCELLOR_REQUIREMENT = 3;
+var PRESIDENT_ELIGIBLE_TO_BE_NEXT_CHANCELLOR_PLAYERS = 5;
+
+var MAX_VOTE_TRACKER = 3;
+var MIN_CARDS_IN_DECK = 4;
+var POLICY_OPTIONS = 3;
+var POLICIES_TO_EXAMINE = 3;
+
+var INVESTIGATE = "investigate";
+var KILL = "kill";
+var APPOINT_PRESIDENT = "appoint_president";
+var EXAMINE = "examine";
+var VETO = "veto";
+var VETO_DECLINE = "veto_decline";
+
+var rulesHandled;
+
 function update() {
 	if (handleVeto()) return;
 	handleRules();
@@ -119,34 +142,39 @@ function setDeck() {
 		.appendTo(deckDiv);
 }
 
-// todo
-function setPolicies() {}
+function setPolicies() {
+	$("#policies_parent_div").hide();
+	if (state.policies !== null) {
+		if (myIndex === state.president) {
+			if (state.policies.length === POLICY_OPTIONS) {
+				setPoliciesHelper();
+			}
+		} else if (myIndex === state.chancellor) {
+			if (state.policies.length === POLICY_OPTIONS - 1) {
+				setPoliciesHelper();
+				if (state.boards[false] >= VETO_UNLOCKED) {
+					addVetoOption();
+				}
+			}
+		}
+	}
+}
+
+function setPoliciesHelper() {
+	$("#policies_parent_div").show();
+	var policiesDiv = $("#policies_div").empty();
+	for (var i = 0; i < state.policies.length; i++) {
+		$("<p>").text(boolToString(state.policies[i])).appendTo(policiesDiv);
+	}
+}
+
+function addVetoOption() {
+	var policiesDiv = $("#policies_div");
+	$("<p>").text("Veto").appendTo(policiesDiv);
+}
 
 // todo
 function setLastTicket() {}
-
-var NUM_LIBERAL_POLICIES = 6;
-var NUM_FASCIST_POLICIES = 11;
-
-var LIBERAL_POLICIES_NEEDED = 5;
-var FASCIST_POLICIES_NEEDED = 6;
-
-var HITLER_CHANCELLOR_REQUIREMENT = 3;
-var PRESIDENT_ELIGIBLE_TO_BE_NEXT_CHANCELLOR_PLAYERS = 5;
-
-var MAX_VOTE_TRACKER = 3;
-var MIN_CARDS_IN_DECK = 4;
-var POLICY_OPTIONS = 3;
-var POLICIES_TO_EXAMINE = 3;
-
-var INVESTIGATE = "investigate";
-var KILL = "kill";
-var APPOINT_PRESIDENT = "appoint_president";
-var EXAMINE = "examine";
-var VETO = "veto";
-var VETO_DECLINE = "veto_decline";
-
-var rulesHandled;
 
 function boolToString(bool) {
 	return bool ? "liberal" : "fascist";
