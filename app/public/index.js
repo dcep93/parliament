@@ -10,6 +10,7 @@
 // lastPresident ?int
 // presidentAction ?Action
 // finished bool
+// date Date
 // enum Action VETO, VETO_DECLINE, EXAMINE, INVESTIGATE, KILL, APPOINT_PRESIDENT
 
 function update() {
@@ -23,8 +24,60 @@ function update() {
 	setLastTicket();
 }
 
-// todo
-function setRules() {}
+function setRules() {
+	var rules = $.trim(getRules()).split("\n");
+	for (var i = 0; i < rules.length; i++) {
+		$("<p>").text(rules[i]).appendTo($("#dynamic_rules"));
+	}
+}
+
+function getRules() {
+	switch (state.players.length) {
+		case 5:
+		case 6:
+			return `
+1 ${boolToString(false)} and Hitler. Hitler knows who the ${boolToString(
+				false
+			)} is.
+3 ${boolToString(
+				false
+			)} policies: The President examines the top 3 cards. Do not change the order.
+`;
+		case 7:
+		case 8:
+			return `
+2 ${boolToString(
+				false
+			)}s and Hitler. Hitler doesn't know who the ${boolToString(
+				false
+			)}s are.
+2 ${boolToString(
+				false
+			)} policies: The President investigates a player's party membership card.
+2 ${boolToString(
+				false
+			)} policies: The President picks the next presidential candidate.
+`;
+		case 9:
+		case 10:
+			return `
+3 ${boolToString(
+				false
+			)}s and Hitler. Hitler doesn't know who the ${boolToString(
+				false
+			)}s are.
+1 ${boolToString(
+				false
+			)} policy: The President investigates a player's party membership card.
+2 ${boolToString(
+				false
+			)} policies: The President investigates a player's party membership card.
+2 ${boolToString(
+				false
+			)} policies: The President picks the next presidential candidate.
+`;
+	}
+}
 
 // todo
 function setPlayers() {}
@@ -62,7 +115,7 @@ var EXAMINE = "examine";
 var VETO = "veto";
 var VETO_DECLINE = "veto_decline";
 
-var rulesHandled = false;
+var rulesHandled;
 
 function boolToString(bool) {
 	return bool ? "liberal" : "fascist";
@@ -340,6 +393,7 @@ function prepare() {
 		playerState.party = Boolean(role);
 	}
 	state.finished = false;
+	state.date = new Date();
 	sendState("prepare");
 }
 
@@ -401,8 +455,8 @@ function handleExamine() {
 }
 
 function handleRules() {
-	if (!rulesHandled) {
-		rulesHandled = true;
+	if (rulesHandled !== state.date) {
+		rulesHandled = state.date;
 		var myState = me().state;
 		var message;
 		if (myState.isHitler) {
