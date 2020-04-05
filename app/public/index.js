@@ -111,8 +111,13 @@ function getBoardDiv(bool) {
 	return $("<p>").text(`${boolToString(bool)} policies: ${numPolicies}`);
 }
 
-// todo
-function setDeck() {}
+function setDeck() {
+	var deckDiv = $("#deck_state").empty();
+	$("<p>").text(`cards in deck: ${state.deck.length}`).appendTo(deckDiv);
+	$("<p>")
+		.text(`cards in discard: ${state.discard.length}`)
+		.appendTo(deckDiv);
+}
 
 // todo
 function setPolicies() {}
