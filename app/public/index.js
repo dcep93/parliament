@@ -13,8 +13,6 @@
 // date Date
 // enum Action VETO, VETO_DECLINE, EXAMINE, INVESTIGATE, KILL, APPOINT_PRESIDENT
 
-// todo data-attr
-
 var NUM_LIBERAL_POLICIES = 6;
 var NUM_FASCIST_POLICIES = 11;
 
@@ -109,7 +107,7 @@ function setPlayers() {
 	var playerStates = $("#player_states").empty();
 	for (var i = 0; i < state.players.length; i++) {
 		var player = state.players[i];
-		var playerDiv = $("<div>").appendTo(playerStates);
+		var playerDiv = $("<div>").attr("data-index", i).appendTo(playerStates);
 		var message = player.name;
 		if (player.state.cheater) message += ` - cheater`;
 		if (player.state.dead) message += ` - dead`;
@@ -171,6 +169,7 @@ function setPoliciesHelper() {
 	for (var i = 0; i < state.policies.length; i++) {
 		$("<p>")
 			.text(boolToString(state.policies[i]))
+			.attr("data-index", i)
 			.click(discardPolicy)
 			.appendTo(policiesDiv);
 	}
@@ -194,8 +193,16 @@ function setVotes() {
 	var votesDiv = $("#votes");
 	if (state.chancellor !== null && state.policies === null) {
 		votesDiv.show();
-		$("<p>").text("ja").click(vote).appendTo(votesDiv);
-		$("<p>").text("nein").click(vote).appendTo(votesDiv);
+		$("<p>")
+			.text("ja")
+			.attr("data-bool", true)
+			.click(vote)
+			.appendTo(votesDiv);
+		$("<p>")
+			.text("nein")
+			.attr("data-bool", false)
+			.click(vote)
+			.appendTo(votesDiv);
 	} else {
 		votesDiv.hide();
 	}
