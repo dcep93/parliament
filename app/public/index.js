@@ -143,7 +143,7 @@ function setDeck() {
 }
 
 function setPolicies() {
-	$("#policies_parent_div").hide();
+	$("#policies_parent").hide();
 	if (state.policies !== null) {
 		if (myIndex === state.president) {
 			if (state.policies.length === POLICY_OPTIONS) {
@@ -161,20 +161,26 @@ function setPolicies() {
 }
 
 function setPoliciesHelper() {
-	$("#policies_parent_div").show();
-	var policiesDiv = $("#policies_div").empty();
+	$("#policies_parent").show();
+	var policiesDiv = $("#policies").empty();
 	for (var i = 0; i < state.policies.length; i++) {
 		$("<p>").text(boolToString(state.policies[i])).appendTo(policiesDiv);
 	}
 }
 
 function addVetoOption() {
-	var policiesDiv = $("#policies_div");
+	var policiesDiv = $("#policies");
 	$("<p>").text("Veto").appendTo(policiesDiv);
 }
 
-// todo
-function setLastTicket() {}
+function setLastTicket() {
+	var lastTicketDiv = $("#last_ticket").empty();
+	for (var i = 0; i < state.lastTicket.length; i++) {
+		var index = state.lastTicket[i];
+		var name = state.players[index].name;
+		$("<p>").text(name).appendTo(lastTicketDiv);
+	}
+}
 
 function boolToString(bool) {
 	return bool ? "liberal" : "fascist";
