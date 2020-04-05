@@ -12,6 +12,35 @@
 // finished bool
 // enum Action VETO, VETO_DECLINE, EXAMINE, INVESTIGATE, KILL, APPOINT_PRESIDENT
 
+function update() {
+	if (handleVeto()) return;
+	handleRules();
+	handleExamine();
+	setPlayers();
+	setBoards();
+	setDeck();
+	setPolicies();
+	setLastTicket();
+}
+
+// todo
+function setRules() {}
+
+// todo
+function setPlayers() {}
+
+// todo
+function setBoards() {}
+
+// todo
+function setDeck() {}
+
+// todo
+function setPolicies() {}
+
+// todo
+function setLastTicket() {}
+
 var NUM_LIBERAL_POLICIES = 6;
 var NUM_FASCIST_POLICIES = 11;
 
@@ -33,7 +62,7 @@ var EXAMINE = "examine";
 var VETO = "veto";
 var VETO_DECLINE = "veto_decline";
 
-var seenAffiliation = false;
+var rulesHandled = false;
 
 function boolToString(bool) {
 	return bool ? "liberal" : "fascist";
@@ -336,12 +365,6 @@ sendState = function () {
 	$("#log_container").hide();
 };
 
-function update() {
-	if (handleVeto()) return;
-	ensureAffiliationSeen();
-	handleExamine();
-}
-
 function handleVeto() {
 	if (state.presidentAction === VETO) {
 		if (myIndex === state.president) {
@@ -377,9 +400,9 @@ function handleExamine() {
 	}
 }
 
-function ensureAffiliationSeen() {
-	if (!seenAffiliation) {
-		seenAffiliation = true;
+function handleRules() {
+	if (!rulesHandled) {
+		rulesHandled = true;
 		var myState = me().state;
 		var message;
 		if (myState.isHitler) {
@@ -406,6 +429,7 @@ function ensureAffiliationSeen() {
 				)}s:\n${fellowsString}`;
 			}
 		}
+		setRules();
 		alert(message);
 	}
 }
