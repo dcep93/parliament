@@ -108,7 +108,11 @@ function setPlayers() {
 	var playerStates = $("#player_states").empty();
 	for (var i = 0; i < state.players.length; i++) {
 		var player = state.players[i];
-		var playerDiv = $("<div>").attr("data-index", i).appendTo(playerStates);
+		var playerDiv = $("<div>")
+			.addClass("player_state")
+			.addClass("bubble")
+			.attr("data-index", i)
+			.appendTo(playerStates);
 		var message = player.name;
 		if (player.state.cheater) message += ` - cheater`;
 		if (player.state.dead) message += ` - dead`;
@@ -124,7 +128,7 @@ function setPlayers() {
 			$("<p>").text("chancellor").appendTo(playerDiv);
 	}
 	if (myIndex === state.president && state.chancellor === null)
-		$(".player_state").click(pickPlayer);
+		$(".player_state").addClass("hover_pointer").click(pickPlayer);
 }
 
 function setBoards() {
@@ -171,6 +175,7 @@ function setPoliciesHelper() {
 		$("<p>")
 			.text(boolToString(state.policies[i]))
 			.attr("data-index", i)
+			.addClass("hover_pointer")
 			.click(discardPolicy)
 			.appendTo(policiesDiv);
 	}
@@ -196,11 +201,15 @@ function setVotes() {
 		votesDiv.show();
 		$("<p>")
 			.text("ja")
+			.addClass("bubble")
+			.addClass("hover_pointer")
 			.attr("data-bool", true)
 			.click(vote)
 			.appendTo(votesDiv);
 		$("<p>")
 			.text("nein")
+			.addClass("bubble")
+			.addClass("hover_pointer")
 			.attr("data-bool", false)
 			.click(vote)
 			.appendTo(votesDiv);
@@ -288,7 +297,9 @@ function pickPlayer() {
 			state.lastPresident = myIndex;
 			return sendState(`appointed ${player.name} as next president`);
 		default:
-			if (state.lastTicket.indexOf(index) !== false)
+			if (index === myIndex)
+				return alert("cannot pick yourself as chancellor");
+			if (state.lastTicket.indexOf(index) !== -1)
 				return alert("that player was on the previous ticket");
 			state.chancellor = index;
 			return sendState(`appointed ${player.name} as chancellor`);
@@ -435,6 +446,8 @@ function getOutcome() {
 
 function getNumFascistPlayers() {
 	switch (state.players.length) {
+		// todo remove
+		case 4:
 		case 5:
 		case 6:
 			return 2;
@@ -568,6 +581,7 @@ function handleRules() {
 				)}s are`;
 			} else {
 				var fellowsString = state.players
+					.filter((player, index) => index !== myIndex)
 					.filter((player) => !player.state.party)
 					.map((player) => player.name)
 					.join("\n");
