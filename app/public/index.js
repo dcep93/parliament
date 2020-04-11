@@ -1,4 +1,5 @@
 // player.state {cheater: bool, party: bool, isHitler: bool, vote: ?bool, dead: bool}
+// message string
 // deck []bool
 // discard []bool
 // president int
@@ -39,14 +40,19 @@ var rulesHandled;
 
 function update() {
 	if (handleVeto()) return;
+	if (handleExamine()) return;
+	handleMessage();
 	handleRules();
-	handleExamine();
 	setPlayers();
 	setBoards();
 	setDeck();
 	setPolicies();
 	setLastTicket();
 	setVotes();
+}
+
+function handleMessage() {
+	$("#message").text(state.message);
 }
 
 function setRules() {
@@ -111,6 +117,7 @@ function setPlayers() {
 		var playerDiv = $("<div>")
 			.addClass("player_state")
 			.addClass("bubble")
+			.addClass("inline")
 			.attr("data-index", i)
 			.appendTo(playerStates);
 		var message = player.name;
@@ -119,8 +126,10 @@ function setPlayers() {
 		$("<p>").text(message).appendTo(playerDiv);
 		var voteBool = player.state.vote;
 		if (voteBool !== null) {
-			var voteMessage = voteBool ? "ja" : "nein";
-			$("<p>").text(`votes ${voteMessage}`).appendTo(playerDiv);
+			var voteMessage = "voted";
+			if (state.chancellor == null || state.policies !== null)
+				voteMessage += ` ${voteBool ? "ja" : "nein"}`;
+			$("<p>").text(`${voteMessage}`).appendTo(playerDiv);
 		}
 		if (state.president === i)
 			$("<p>").text("president").appendTo(playerDiv);
@@ -176,6 +185,7 @@ function setPoliciesHelper() {
 			.text(boolToString(state.policies[i]))
 			.attr("data-index", i)
 			.addClass("hover_pointer")
+			.addClass("bubble")
 			.click(discardPolicy)
 			.appendTo(policiesDiv);
 	}
@@ -196,7 +206,7 @@ function setLastTicket() {
 }
 
 function setVotes() {
-	var votesDiv = $("#votes");
+	var votesDiv = $("#votes").empty();
 	if (state.chancellor !== null && state.policies === null) {
 		votesDiv.show();
 		$("<p>")
@@ -224,7 +234,7 @@ function boolToString(bool) {
 
 function requestVeto() {
 	state.presidentAction = VETO;
-	sendState("requests a veto");
+	sendStateMessage("requests a veto");
 }
 
 function discardPolicy() {
@@ -244,14 +254,18 @@ function discardPolicy() {
 			state.finished = true;
 			message += ` - ${boolToString(victory)}s win!`;
 		}
-		state.players.forEach((player) => {
-			player.state.vote = null;
-		});
-		state.chancellor = null;
+		finishElection();
 	} else {
 		message = "discarded a policy";
 	}
-	sendState(message);
+	sendStateMessage(message);
+}
+
+function finishElection() {
+	state.players.forEach((player) => {
+		player.state.vote = null;
+	});
+	state.chancellor = null;
 }
 
 function isMyTurn() {
@@ -275,7 +289,7 @@ function isMyTurn() {
 }
 
 function pickPlayer() {
-	var index = $(this).attr("data-index");
+	var index = parseInt($(this).attr("data-index"));
 	var player = state.players[index];
 	var presidentAction = state.presidentAction;
 	state.presidentAction = null;
@@ -283,7 +297,8 @@ function pickPlayer() {
 		case INVESTIGATE:
 			var affiliation = boolToString(player.state.party);
 			alert(`${player.name} is a ${affiliation}`);
-			return sendState(`investigated ${player.name}`);
+			advancePresident();
+			return sendStateMessage(`investigated ${player.name}`);
 		case KILL:
 			player.state.dead = true;
 			var message = `killed ${player.name}`;
@@ -291,22 +306,26 @@ function pickPlayer() {
 				message += ` ${boolToString(true)}s win!`;
 				state.finished = true;
 			}
-			return sendState(message);
+			advancePresident();
+			return sendStateMessage(message);
 		case APPOINT_PRESIDENT:
 			state.president = index;
 			state.lastPresident = myIndex;
-			return sendState(`appointed ${player.name} as next president`);
+			return sendStateMessage(
+				`appointed ${player.name} as next president`
+			);
 		default:
 			if (index === myIndex)
 				return alert("cannot pick yourself as chancellor");
 			if (state.lastTicket.indexOf(index) !== -1)
 				return alert("that player was on the previous ticket");
 			state.chancellor = index;
-			return sendState(`appointed ${player.name} as chancellor`);
+			return sendStateMessage(`appointed ${player.name} as chancellor`);
 	}
 }
 
 function vote() {
+	$("#log_container").hide();
 	var raw = $(this).attr("data-bool");
 	var bool = JSON.parse(raw);
 	me().state.vote = bool;
@@ -321,19 +340,21 @@ function vote() {
 				action += ` hitler - ${boolToString(false)}s win`;
 			}
 			state.voteTracker = 0;
-			state.policies = state.deck.splice(POLICY_OPTIONS);
+			state.policies = state.deck.splice(0, POLICY_OPTIONS);
 			if (fewPlayersLeft()) {
-				state.lastTicket = [state.state.chancellor];
+				state.lastTicket = [state.chancellor];
 			} else {
 				state.lastTicket = [state.president, state.chancellor];
 			}
 		} else {
+			finishElection();
 			action = "not elected";
 			var incrementMessage = incrementVoteTracker();
 			if (incrementMessage !== null) action += ` - ${incrementMessage}`;
 			advancePresident();
 		}
 		message += ` - ${action}`;
+		state.message = action;
 	}
 	sendState(message);
 }
@@ -385,6 +406,7 @@ function getPresidentAction(policy) {
 					case 10:
 						return INVESTIGATE;
 				}
+				break;
 			case 2:
 				switch (state.players.length) {
 					case 7:
@@ -393,6 +415,7 @@ function getPresidentAction(policy) {
 					case 10:
 						return INVESTIGATE;
 				}
+				break;
 			case 3:
 				switch (state.players.length) {
 					case 5:
@@ -404,6 +427,7 @@ function getPresidentAction(policy) {
 					case 10:
 						return APPOINT_PRESIDENT;
 				}
+				break;
 			case 4:
 			case 5:
 				return KILL;
@@ -500,7 +524,7 @@ function prepare() {
 	}
 	state.finished = false;
 	state.date = new Date();
-	sendState("prepare");
+	sendStateMessage("prepare");
 }
 
 function buildArray(numTrues, numFalses) {
@@ -518,12 +542,13 @@ function newState() {
 	return playerState;
 }
 
-var originalSendState = sendState;
-sendState = function () {
-	originalSendState(...arguments);
-	// in case it was opened earlier
+function sendStateMessage(message) {
+	state.message = `[${me().name}] ${message}`;
+	if (state.presidentAction !== null)
+		state.message += ` ${state.presidentAction}`;
+	sendState(message);
 	$("#log_container").hide();
-};
+}
 
 function handleVeto() {
 	if (state.presidentAction === VETO) {
@@ -534,10 +559,10 @@ function handleVeto() {
 				var incrementMessage = incrementVoteTracker();
 				if (incrementMessage !== null)
 					message += ` - ${incrementMessage}`;
-				sendState(message);
+				sendStateMessage(message);
 			} else {
 				state.presidentAction = VETO_DECLINE;
-				sendState("declines a veto");
+				sendStateMessage("declines a veto");
 			}
 		}
 		return true;
@@ -547,17 +572,19 @@ function handleVeto() {
 }
 
 function handleExamine() {
-	if (state.presidentAction === EXAMINE) {
+	if (state.presidentAction === EXAMINE && myIndex === state.president) {
 		state.presidentAction = null;
-		if (myIndex === state.president) {
-			var topPolicies = state.deck
-				.slice(POLICIES_TO_EXAMINE)
-				.map(boolToString)
-				.reverse()
-				.join(" ");
-			alert(`top 3 cards are: ${topPolicies}`);
-		}
+		var topPolicies = state.deck
+			.slice(POLICIES_TO_EXAMINE)
+			.map(boolToString)
+			.reverse()
+			.join(" ");
+		alert(`top 3 cards are: ${topPolicies}`);
+		advancePresident();
+		sendStateMessage("examined top 3 cards");
+		return true;
 	}
+	return false;
 }
 
 function handleRules() {
