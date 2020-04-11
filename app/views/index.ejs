@@ -8,10 +8,10 @@
 		<link rel="stylesheet" type="text/css" href="index.css" />
 	</head>
 	<body>
+		<p class="inline bubble">Version: <%= sha %></p>
 		<%- include(views+'/pre.html') %>
 
 		<div id="global_controls" class="bubble inline">
-			<p class="inline bubble">Version: <%= sha %></p>
 			<%- include(views+'/global_controls.html') %>
 			<button id="start_over">Start Over</button>
 			<div class="space">
