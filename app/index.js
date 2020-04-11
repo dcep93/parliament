@@ -9,7 +9,8 @@ var views = path.join(path.dirname(require.main.filename), "views");
 router.get("/", function (req, res) {
 	res.render(index, {
 		title: "Secret Hitler",
-		views: views,
+		sha: router.sha,
+		views,
 	});
 });
 
