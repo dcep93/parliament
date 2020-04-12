@@ -56,7 +56,8 @@ function handleMessage() {
 }
 
 function setRules() {
-	var rules = $.trim(getRules()).split("\n");
+	var rulesRaw = $.trim(getRules()) + "\n" + $.trim(getCommonRules());
+	var rules = rulesRaw.split("\n");
 	for (var i = 0; i < rules.length; i++) {
 		$("<p>").text(rules[i]).appendTo($("#dynamic_rules"));
 	}
@@ -108,6 +109,13 @@ function getRules() {
 			)} policies: The President picks the next presidential candidate.
 `;
 	}
+}
+
+function getCommonRules() {
+	return `
+4 ${boolToString(false)} policies: President kills someone.
+5 ${boolToString(false)} policies: President kills someone.
+`;
 }
 
 function setPlayers() {
