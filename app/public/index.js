@@ -234,6 +234,7 @@ function setVotes() {
 	} else {
 		votesDiv.hide();
 	}
+	$("vote_tracker").text(state.voteTracker);
 }
 
 function boolToString(bool) {
