@@ -610,7 +610,11 @@ function handleRules() {
 				var fellowsString = state.players
 					.filter((player, index) => index !== myIndex)
 					.filter((player) => !player.state.party)
-					.map((player) => player.name)
+					.map(
+						(player) =>
+							player.name +
+							(player.state.isHitler ? " (Hitler)" : "")
+					)
 					.join("\n");
 				message += `\nyour fellow ${boolToString(
 					false
